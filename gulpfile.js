@@ -1,22 +1,29 @@
-require('shelljs/global')
-var gulp        = require('gulp');
-var browsersync = require('browser-sync');
-var reload      = browsersync.reload
-var watch       = require('gulp-watch');
-var haml        = require('gulp-ruby-haml');
-var changed     = require('gulp-changed');
-var runSequence = require('run-sequence')
-var gcallback = require('gulp-callback')
-var plumber = require('gulp-plumber')
 var argv = require('yargs').argv
+var browserSync = require('browser-sync')
+var cloudflare = require('gulp-cloudflare')
+var combiner = require('stream-combiner2')
+var concat = require('gulp-concat')
+var cp = require('child_process')
+var gulp = require('gulp')
+var haml = require('gulp-ruby-haml')
+var ngmin = require('gulp-ngmin')
+var path = require('path')
+var plumber = require('gulp-plumber')
+var prefix = require('gulp-autoprefixer')
+var task = require('gulp-task')
+var rename = require('gulp-rename')
+var sass = require('gulp-sass')
+var shell = require('shelljs/global')
+var uglify = require('gulp-uglifyjs')
+var watch = require('gulp-watch')
 
 gulp.task('link', function() {
-  var pkgJson = require('./package.json')
+    var pkgJson = require('./package.json')
 
-  var deps = pkgJson.devDependencies
-  for (dep in deps) {
-    exec('sudo npm link ' + dep + '@' + deps[dep])
-  }
+    var deps = pkgJson.devDependencies
+    for (dep in deps) {
+        exec('sudo npm link ' + dep + '@' + deps[dep])
+    }
 })
 
 var messages = {
@@ -29,14 +36,13 @@ function onError(err) {
 }
 
 gulp.task('reload', function () {
-  browsersync.reload()
+  browserSync.reload()
 });
 
 
 gulp.task('browser-sync', function() {
   var open = argv.file || "open"
-  console.log("open: " + open)
-  browsersync({
+  browserSync({
     server: {
       baseDir: '.',
       index: open
@@ -45,36 +51,32 @@ gulp.task('browser-sync', function() {
   });
 });
 
-// Watch for changes in Haml files
-gulp.task('haml-watch', function() {
-  var dest = '.'
-  gulp.src('./*.haml').
-      pipe(plumber({
-        onError: onError
-      })).
-      pipe(watch('./*.haml')).
-      pipe(changed(dest, {extension: '.html'})).
-      pipe(haml()).
-      pipe(gulp.dest(dest)).
-      pipe(gcallback(function() {
-        console.log("HAML DONE")
-        reload()
-      }))
+function hamlBuild() {
+    return combiner(
+        haml(),
+        rename(function (path) {
+            path.dirname += '/../'
+        })
+    )
+}
+
+gulp.task('haml-watch', function () {
+    gulp.src(config.paths.haml.src, {read: false})
+        .pipe(plumber({
+            onError: onError
+        }))
+        .pipe(watch(config.paths.haml.src))
+        .pipe(hamlBuild())
+        .pipe(gulp.dest('./'))
 })
 
-gulp.task('haml', function() {
-  var glob = argv.file || './*.haml'
-  var dest = '.'
-  gulp.src(glob).
-      pipe(plumber({
-        onError: onError
-      })).
-      pipe(haml()).
-      pipe(gulp.dest(dest)).
-      pipe(gcallback(function() {
-        console.log("HAML DONE")
-        reload()
-      }))
+gulp.task('haml-build', function () {
+    return gulp.src(config.paths.haml.src)
+        .pipe(plumber({
+            onError: onError
+        }))
+        .pipe(hamlBuild())
+        .pipe(gulp.dest('./'))
 })
 
 gulp.task('watch', function () {

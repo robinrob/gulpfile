@@ -2,11 +2,9 @@
   "name": "robinrob.github.io-dev",
   "description": "mrrobinsmith.com dev",
   "version": "1.0.0",
-  "dependencies": {
-    "gulp": "",
-    "browser-sync": ""
-  },
   "devDependencies": {
+    "gulp": "",
+    "browser-sync": "",
     "gulp-ruby-haml": "0.0.4",
     "gulp-watch": "~4.2.4",
     "gulp-changed": "~1.2.1",
@@ -14,6 +12,7 @@
     "gulp-callback": "0.0.3",
     "shelljs": "~0.5.1",
     "gulp-plumber": "~1.0.1",
-    "yargs": "~3.10.0"
+    "yargs": "~3.10.0",
+    "stream-combiner2": "~1.0.2"
   }
 }
